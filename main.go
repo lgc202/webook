@@ -28,7 +28,7 @@ func corsHandler() gin.HandlerFunc {
 
 func main() {
 	server := gin.Default()
-	//server.Use(corsHandler())
+	server.Use(corsHandler())
 	u := web.NewUserHandler()
 	u.RegisterRoutes(server)
 	server.Run(":8080")
