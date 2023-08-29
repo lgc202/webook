@@ -4,6 +4,8 @@ import (
 	regexp "github.com/dlclark/regexp2"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"webook/internal/domain"
+	"webook/internal/service"
 )
 
 const (
@@ -13,12 +15,14 @@ const (
 )
 
 type UserHandler struct {
+	svc              *service.UserService
 	emailRegexExp    *regexp.Regexp
 	passwordRegexExp *regexp.Regexp
 }
 
-func NewUserHandler() *UserHandler {
+func NewUserHandler(svc *service.UserService) *UserHandler {
 	return &UserHandler{
+		svc:              svc,
 		emailRegexExp:    regexp.MustCompile(emailRegexPattern, regexp.None),
 		passwordRegexExp: regexp.MustCompile(passwordRegexPattern, regexp.None),
 	}
@@ -77,6 +81,15 @@ func (u *UserHandler) SignUp(ctx *gin.Context) {
 	if !isPassword {
 		ctx.String(http.StatusOK,
 			"密码必须包含数字、字母、特殊字符，并且长度不能小于 8 位")
+		return
+	}
+
+	err = u.svc.SignUp(ctx, domain.User{
+		Email:    req.Email,
+		Password: req.Password,
+	})
+	if err != nil {
+		ctx.String(http.StatusOK, "系统异常")
 		return
 	}
 

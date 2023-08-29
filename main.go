@@ -3,8 +3,13 @@ package main
 import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
 	"strings"
 	"time"
+	"webook/internal/repository"
+	"webook/internal/repository/dao"
+	"webook/internal/service"
 	"webook/internal/web"
 )
 
@@ -27,9 +32,34 @@ func corsHandler() gin.HandlerFunc {
 }
 
 func main() {
+	db := initDB()
+	server := initServer()
+	user := initUser(db)
+	user.RegisterRoutes(server)
+	server.Run(":8080")
+}
+
+func initDB() *gorm.DB {
+	db, err := gorm.Open(mysql.Open("root:root@tcp(localhost:13316)/webook"))
+	if err != nil {
+		panic(err)
+	}
+	err = dao.InitTables(db)
+	if err != nil {
+		panic(err)
+	}
+	return db
+}
+
+func initUser(db *gorm.DB) *web.UserHandler {
+	userDao := dao.NewUserDao(db)
+	userRepository := repository.NewUserRepository(userDao)
+	userService := service.NewUserService(userRepository)
+	return web.NewUserHandler(userService)
+}
+
+func initServer() *gin.Engine {
 	server := gin.Default()
 	server.Use(corsHandler())
-	u := web.NewUserHandler()
-	u.RegisterRoutes(server)
-	server.Run(":8080")
+	return server
 }
