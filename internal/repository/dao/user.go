@@ -8,8 +8,11 @@ import (
 	"time"
 )
 
-// ErrUserDuplicateEmail 这个算是 user 专属的
-var ErrUserDuplicateEmail = errors.New("邮箱冲突")
+var (
+	// ErrUserDuplicateEmail 这个算是 user 专属的
+	ErrUserDuplicateEmail = errors.New("邮箱冲突")
+	ErrUserNotFound       = gorm.ErrRecordNotFound
+)
 
 type UserDao struct {
 	db *gorm.DB
@@ -17,6 +20,17 @@ type UserDao struct {
 
 func NewUserDao(db *gorm.DB) *UserDao {
 	return &UserDao{db: db}
+}
+
+// User 对应数据库表
+type User struct {
+	Id       int64  `gorm:"primaryKey,autoIncrement"`
+	Email    string `gorm:"unique"`
+	Password string
+	// 创建时间
+	CTime int64
+	// 更新时间
+	UTime int64
 }
 
 func (dao *UserDao) Insert(ctx context.Context, u User) error {
@@ -34,13 +48,9 @@ func (dao *UserDao) Insert(ctx context.Context, u User) error {
 	return err
 }
 
-// User 对应数据库表
-type User struct {
-	Id       int64  `gorm:"primaryKey,autoIncrement"`
-	Email    string `gorm:"unique"`
-	Password string
-	// 创建时间
-	CTime int64
-	// 更新时间
-	UTime int64
+func (dao *UserDao) FindByEmail(ctx context.Context, email string) (User, error) {
+	var u User
+	err := dao.db.WithContext(ctx).Where("email = ?", email).First(&u).Error
+	//err := dao.db.WithContext(ctx).First(&u, "email = ?", email).Error
+	return u, err
 }
