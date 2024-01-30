@@ -126,6 +126,9 @@ func (u *UserHandler) Login(ctx *gin.Context) {
 
 	sess := sessions.Default(ctx)
 	sess.Set(userIdKey, user.Id)
+	sess.Options(sessions.Options{
+		MaxAge: 60, // 过期时间
+	})
 	err = sess.Save()
 	if err != nil {
 		ctx.String(http.StatusOK, "服务器异常")
@@ -141,4 +144,6 @@ func (u *UserHandler) Edit(ctx *gin.Context) {
 }
 
 func (u *UserHandler) Profile(ctx *gin.Context) {
+	ctx.String(http.StatusOK, "获取成功")
+	return
 }

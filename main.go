@@ -3,7 +3,7 @@ package main
 import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/sessions"
-	"github.com/gin-contrib/sessions/cookie"
+	"github.com/gin-contrib/sessions/redis"
 	"github.com/gin-gonic/gin"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -65,7 +65,15 @@ func initServer() *gin.Engine {
 	server := gin.Default()
 	server.Use(corsHandler())
 
-	store := cookie.NewStore([]byte("secret"))
+	//store := cookie.NewStore([]byte("secret"))
+
+	store, err := redis.NewStore(16, "tcp", "localhost:6379", "",
+		[]byte("bKaQSG7MemGOtSx5NswBUW18YL1xK7Yk"),
+		[]byte("F4fUZl0Pw8Qe5skqzkJxJPFUtdSIZsR8"))
+
+	if err != nil {
+		panic(err)
+	}
 	server.Use(sessions.Sessions("mysession", store))
 
 	server.Use(middleware.NewLoginMiddlewareBuilder().
